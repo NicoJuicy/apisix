@@ -61,7 +61,7 @@ In `rules`, match `case` in order according to the index of the `rules`, and exe
 
 :::
 
-## Enabling the Plugin
+## Enable Plugin
 
 You can configure the `workflow` plugin on a Route as shown below:
 
@@ -126,30 +126,30 @@ HTTP/1.1 403 Forbidden
 **Example 2: if the request uri is `/hello/v2/appid`, the `workflow` plugin would execute the `limit-count` plugin**
 
 ```shell
-curl http://127.0.0.1:0080/hello/v2/appid -i
+curl http://127.0.0.1:9080/hello/v2/appid -i
 HTTP/1.1 200 OK
 ```
 
 ```shell
-curl http://127.0.0.1:0080/hello/v2/appid -i
+curl http://127.0.0.1:9080/hello/v2/appid -i
 HTTP/1.1 200 OK
 ```
 
 ```shell
-curl http://127.0.0.1:0080/hello/v2/appid -i
+curl http://127.0.0.1:9080/hello/v2/appid -i
 HTTP/1.1 429 Too Many Requests
 ```
 
 **Example 3: if the request can not match any `case` in the `rules`, the `workflow` plugin would do nothing**
 
 ```shell
-curl http://127.0.0.1:0080/hello/fake -i
+curl http://127.0.0.1:9080/hello/fake -i
 HTTP/1.1 200 OK
 ```
 
-## Disable Plugin
+## Delete Plugin
 
-To disable the `workflow` plugin, you can delete the corresponding JSON configuration from the Plugin configuration. APISIX will automatically reload and you do not have to restart for this to take effect.
+To remove the `workflow` plugin, you can delete the corresponding JSON configuration from the Plugin configuration. APISIX will automatically reload and you do not have to restart for this to take effect.
 
 ```shell
 curl http://127.0.0.1:9180/apisix/admin/routes/1 \

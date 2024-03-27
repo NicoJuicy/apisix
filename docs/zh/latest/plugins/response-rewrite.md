@@ -84,7 +84,7 @@ curl http://127.0.0.1:9180/apisix/admin/routes/1 \
                 "set": {
                     "X-Server-id": 3,
                     "X-Server-status": "on",
-                    "X-Server-balancer_addr": "$balancer_ip:$balancer_port"
+                    "X-Server-balancer-addr": "$balancer_ip:$balancer_port"
                 }
             },
             "vars":[
@@ -108,7 +108,7 @@ curl http://127.0.0.1:9180/apisix/admin/routes/1 \
 ```json
 "headers": {
     "add": [
-        "X-Server-balancer_addr: $balancer_ip:$balancer_port"
+        "X-Server-balancer-addr: $balancer_ip:$balancer_port"
     ],
     "remove": [
         "X-TO-BE-REMOVED"
@@ -138,7 +138,7 @@ Transfer-Encoding: chunked
 Connection: keep-alive
 X-Server-id: 3
 X-Server-status: on
-X-Server-balancer_addr: 127.0.0.1:80
+X-Server-balancer-addr: 127.0.0.1:80
 
 {"code":"ok","message":"new json body"}
 ```
@@ -169,7 +169,7 @@ curl http://127.0.0.1:9180/apisix/admin/routes/1 -H 'X-API-KEY: edd1c9f034335f13
         "set": {
             "X-Server-id":3,
             "X-Server-status":"on",
-            "X-Server-balancer_addr":"$balancer_ip:$balancer_port"
+            "X-Server-balancer-addr":"$balancer_ip:$balancer_port"
         }
       },
       "filters":[
@@ -225,7 +225,7 @@ X-Server-id: 3
 
 ```
 
-## 禁用插件
+## 删除插件
 
 当你需要禁用 `response-rewrite` 插件时，可以通过以下命令删除相应的 JSON 配置，APISIX 将会自动重新加载相关配置，无需重启服务：
 

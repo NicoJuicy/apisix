@@ -220,7 +220,7 @@ local function fetch_jwt_token(conf, ctx)
     return val
 end
 
-local function get_secret(conf, consumer_name)
+local function get_secret(conf)
     local secret = conf.secret
 
     if conf.base64_secret then
@@ -231,7 +231,7 @@ local function get_secret(conf, consumer_name)
 end
 
 
-local function get_rsa_or_ecdsa_keypair(conf, consumer_name)
+local function get_rsa_or_ecdsa_keypair(conf)
     local public_key = conf.public_key
     local private_key = conf.private_key
 
@@ -254,14 +254,15 @@ local function get_real_payload(key, auth_conf, payload)
     }
     if payload then
         local extra_payload = core.json.decode(payload)
-        core.table.merge(real_payload, extra_payload)
+        core.table.merge(extra_payload, real_payload)
+        return extra_payload
     end
     return real_payload
 end
 
 
 local function sign_jwt_with_HS(key, consumer, payload)
-    local auth_secret, err = get_secret(consumer.auth_conf, consumer.username)
+    local auth_secret, err = get_secret(consumer.auth_conf)
     if not auth_secret then
         core.log.error("failed to sign jwt, err: ", err)
         core.response.exit(503, "failed to sign jwt")
@@ -286,7 +287,7 @@ end
 
 local function sign_jwt_with_RS256_ES256(key, consumer, payload)
     local public_key, private_key, err = get_rsa_or_ecdsa_keypair(
-        consumer.auth_conf, consumer.username
+        consumer.auth_conf
     )
     if not public_key then
         core.log.error("failed to sign jwt, err: ", err)
@@ -321,13 +322,13 @@ local function algorithm_handler(consumer, method_only)
             return sign_jwt_with_HS
         end
 
-        return get_secret(consumer.auth_conf, consumer.username)
+        return get_secret(consumer.auth_conf)
     elseif consumer.auth_conf.algorithm == "RS256" or consumer.auth_conf.algorithm == "ES256"  then
         if method_only then
             return sign_jwt_with_RS256_ES256
         end
 
-        local public_key, _, err = get_rsa_or_ecdsa_keypair(consumer.auth_conf, consumer.username)
+        local public_key, _, err = get_rsa_or_ecdsa_keypair(consumer.auth_conf)
         return public_key, err
     end
 end

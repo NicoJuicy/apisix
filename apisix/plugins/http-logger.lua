@@ -35,6 +35,13 @@ local schema = {
         timeout = {type = "integer", minimum = 1, default = 3},
         log_format = {type = "object"},
         include_req_body = {type = "boolean", default = false},
+        include_req_body_expr = {
+            type = "array",
+            minItems = 1,
+            items = {
+                type = "array"
+            }
+        },
         include_resp_body = {type = "boolean", default = false},
         include_resp_body_expr = {
             type = "array",
@@ -54,7 +61,9 @@ local schema = {
 local metadata_schema = {
     type = "object",
     properties = {
-        log_format = log_util.metadata_schema_log_format,
+        log_format = {
+            type = "object"
+        }
     },
 }
 

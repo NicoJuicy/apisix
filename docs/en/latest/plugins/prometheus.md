@@ -77,6 +77,25 @@ plugin_attr:
                 - upstream_status: $upstream_status
 ```
 
+### Specifying `default_buckets`
+
+`DEFAULT_BUCKETS` is the default value for bucket array in `http_latency` metrics.
+
+You can change the `DEFAULT_BUCKETS` by configuring `default_buckets` attribute in you configuration file.
+
+Here is a configuration example:
+
+```yaml title="conf/config.yaml"
+plugin_attr:
+  prometheus:
+    default_buckets:
+      - 15
+      - 55
+      - 105
+      - 205
+      - 505
+```
+
 ## API
 
 This Plugin will add the API endpoint `/apisix/prometheus/metrics` or your custom export URI for exposing the metrics.
@@ -108,11 +127,11 @@ You can then expose it by using the [public-api](public-api.md) Plugin.
 If the Prometheus plugin collects too many metrics, it will take CPU resources to calculate the metric data when getting the metrics via URI, which may affect APISIX to process normal requests. To solve this problem, APISIX exposes the URI and calculates the metrics in the [privileged agent](https://github.com/openresty/lua-resty-core/blob/master/lib/ngx/process.md#enable_privileged_agent).
 If the URI is exposed using the public-api plugin, then APISIX will calculate the metric data in a normal worker process, which may still affect APISIX processing of normal requests.
 
-This feature requires APISIX to run on [APISIX-Base](../FAQ.md#how-do-i-build-the-apisix-base-environment).
+This feature requires APISIX to run on [APISIX-Runtime](../FAQ.md#how-do-i-build-the-apisix-runtime-environment).
 
 :::
 
-## Enabling the Plugin
+## Enable Plugin
 
 The `prometheus` Plugin can be enabled with an empty table.
 
@@ -340,9 +359,9 @@ apisix_upstream_status{name="/apisix/routes/1",ip="100.24.156.8",port="80"} 0
 apisix_upstream_status{name="/apisix/routes/1",ip="52.86.68.46",port="80"} 1
 ```
 
-## Disable Plugin
+## Delete Plugin
 
-To disable the `prometheus` Plugin, you can delete the corresponding JSON configuration from the Plugin configuration. APISIX will automatically reload and you do not have to restart for this to take effect.
+To remove the `prometheus` Plugin, you can delete the corresponding JSON configuration from the Plugin configuration. APISIX will automatically reload and you do not have to restart for this to take effect.
 
 ```shell
 curl http://127.0.0.1:9180/apisix/admin/routes/1  -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -d '
@@ -362,7 +381,7 @@ curl http://127.0.0.1:9180/apisix/admin/routes/1  -H 'X-API-KEY: edd1c9f034335f1
 
 :::info IMPORTANT
 
-This feature requires APISIX to run on [APISIX-Base](../FAQ.md#how-do-i-build-the-apisix-base-environment?).
+This feature requires APISIX to run on [APISIX-Runtime](../FAQ.md#how-do-i-build-the-apisix-runtime-environment?).
 
 :::
 

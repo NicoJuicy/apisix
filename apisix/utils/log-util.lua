@@ -17,9 +17,11 @@
 local core = require("apisix.core")
 local plugin = require("apisix.plugin")
 local expr = require("resty.expr.v1")
-local ngx  = ngx
+local content_decode = require("apisix.utils.content-decode")
+local ngx = ngx
 local pairs = pairs
 local ngx_now = ngx.now
+local ngx_header = ngx.header
 local os_date = os.date
 local str_byte = string.byte
 local math_floor = math.floor
@@ -32,14 +34,6 @@ local lru_log_format = core.lrucache.new({
 })
 
 local _M = {}
-_M.metadata_schema_log_format = {
-    type = "object",
-    default = {
-        ["host"] = "$host",
-        ["@timestamp"] = "$time_iso8601",
-        ["client_ip"] = "$remote_addr",
-    },
-}
 
 
 local function gen_log_format(format)
@@ -54,6 +48,7 @@ local function gen_log_format(format)
     core.log.info("log_format: ", core.json.delay_encode(log_format))
     return log_format
 end
+
 
 local function get_custom_format_log(ctx, format)
     local log_format = lru_log_format(format or "", nil, gen_log_format, format)
@@ -210,7 +205,27 @@ function _M.inject_get_full_log(f)
 end
 
 
+local function is_match(match, ctx)
+    local match_result
+    for _, m in pairs(match) do
+        local expr, _ = expr.new(m)
+        match_result = expr:eval(ctx.var)
+        if match_result then
+            break
+        end
+    end
+
+    return match_result
+end
+
+
 function _M.get_log_entry(plugin_name, conf, ctx)
+    -- If the "match" configuration is set and the matching conditions are not met,
+    -- then do not log the message.
+    if conf.match and not is_match(conf.match, ctx) then
+        return
+    end
+
     local metadata = plugin.plugin_metadata(plugin_name)
     core.log.info("metadata: ", core.json.delay_encode(metadata))
 
@@ -299,7 +314,29 @@ function _M.collect_body(conf, ctx)
             if not final_body then
                 return
             end
-            ctx.resp_body = final_body
+
+            local response_encoding = ngx_header["Content-Encoding"]
+            if not response_encoding then
+                ctx.resp_body = final_body
+                return
+            end
+
+            local decoder = content_decode.dispatch_decoder(response_encoding)
+            if not decoder then
+                core.log.warn("unsupported compression encoding type: ",
+                              response_encoding)
+                ctx.resp_body = final_body
+                return
+            end
+
+            local decoded_body, err = decoder(final_body)
+            if err ~= nil then
+                core.log.warn("try decode compressed data err: ", err)
+                ctx.resp_body = final_body
+                return
+            end
+
+            ctx.resp_body = decoded_body
         end
     end
 end

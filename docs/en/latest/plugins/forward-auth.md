@@ -49,6 +49,7 @@ This Plugin moves the authentication and authorization logic to a dedicated exte
 | keepalive_timeout | integer       | False    | 60000ms | [1000, ...]ms  | Idle time after which the connection is closed.                                                                                                            |
 | keepalive_pool    | integer       | False    | 5       | [1, ...]ms     | Connection pool limit.                                                                                                                           |
 | allow_degradation | boolean       | False    | false   |                | When set to `true`, allows authentication to be skipped when authentication server is unavailable. |
+| status_on_error   | integer       | False    | 403     | [200,...,599]  | Sets the HTTP status that is returned to the client when there is a network error to the authorization service. The default status is “403” (HTTP Forbidden). |
 
 ## Data definition
 
@@ -156,9 +157,9 @@ HTTP/1.1 403 Forbidden
 Location: http://example.com/auth
 ```
 
-## Disable Plugin
+## Delete Plugin
 
-To disable the `forward-auth` Plugin, you can delete the corresponding JSON configuration from the Plugin configuration. APISIX will automatically reload and you do not have to restart for this to take effect.
+To remove the `forward-auth` Plugin, you can delete the corresponding JSON configuration from the Plugin configuration. APISIX will automatically reload and you do not have to restart for this to take effect.
 
 ```shell
 curl http://127.0.0.1:9180/apisix/admin/routes/1 -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -d '

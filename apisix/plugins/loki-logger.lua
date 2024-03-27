@@ -104,7 +104,9 @@ local schema = {
 local metadata_schema = {
     type = "object",
     properties = {
-        log_format = log_util.metadata_schema_log_format,
+        log_format = {
+            type = "object"
+        }
     },
 }
 
@@ -192,18 +194,18 @@ function _M.log(conf, ctx)
         return
     end
 
+    local labels = conf.log_labels
+
+    -- parsing possible variables in label value
+    for key, value in pairs(labels) do
+        local new_val, err, n_resolved = core.utils.resolve_var(value, ctx.var)
+        if not err and n_resolved > 0 then
+            labels[key] = new_val
+        end
+    end
+
     -- generate a function to be executed by the batch processor
     local func = function(entries)
-        local labels = conf.log_labels
-
-        -- parsing possible variables in label value
-        for key, value in pairs(labels) do
-            local new_val, err, n_resolved = core.utils.resolve_var(value, ctx.var)
-            if not err and n_resolved > 0 then
-                labels[key] = new_val
-            end
-        end
-
         -- build loki request data
         local data = {
             streams = {

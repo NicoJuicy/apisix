@@ -45,8 +45,8 @@ description: 本文介绍了关于 Apache APISIX `opentelemetry` 插件的基本
 | sampler.options.root.name             | string        | 否     | always_off                                      | ["always_on", "always_off", "trace_id_ratio"]                | root 采样策略。 |
 | sampler.options.root.options          | object        | 否     | {fraction = 0}                                  |                                                              | root 采样策略参数。 |
 | sampler.options.root.options.fraction | number        | 否     | 0                                               | [0, 1]                                                       | `trace_id_ratio` root 采样策略的百分比 |
-| additional_attributes                 | array[string] | 否     |                                                 |                                                              | 追加到 trace span 的额外属性（变量名为 `key`，变量值为 `value`）。 |
-| additional_attributes[0]              | string        | 是     |                                                 |                                                              | APISIX 或 NGINX 变量，例如：`http_header` 或者 `route_id`。 |
+| additional_attributes                 | array[string] | 否     |                                                 |                                                              | 追加到 trace span 的额外属性，支持内置 NGINX 或 APISIX 变量，例如：`http_header` 或者 `route_id`。 |
+| additional_header_prefix_attributes   | array[string] | False    |                                                 |                                                              | 附加到跟踪范围属性的标头或标头前缀。例如，使用 `x-my-header"` 或 `x-my-headers-*` 来包含带有前缀 `x-my-headers-` 的所有标头。                                                                                                                                                                   |
 
 ## 如何设置数据上报
 
@@ -88,6 +88,29 @@ plugin_attr:
       max_export_batch_size: 2
 ```
 
+## 如何使用变量
+
+以下`nginx`变量是由`opentelemetry` 设置的。
+
+- `opentelemetry_context_traceparent` -  [W3C trace context](https://www.w3.org/TR/trace-context/#trace-context-http-headers-format), 例如：`00-0af7651916cd43dd8448eb211c80319c-b9c7c989f97918e1-01`
+- `opentelemetry_trace_id` - 当前 span 的 trace_id
+- `opentelemetry_span_id` - 当前 span 的 span_id
+
+如何使用？你需要在配置文件（`./conf/config.yaml`）设置如下：
+
+```yaml title="./conf/config.yaml"
+http:
+    enable_access_log: true
+    access_log: "/dev/stdout"
+    access_log_format: '{"time": "$time_iso8601","opentelemetry_context_traceparent": "$opentelemetry_context_traceparent","opentelemetry_trace_id": "$opentelemetry_trace_id","opentelemetry_span_id": "$opentelemetry_span_id","remote_addr": "$remote_addr","uri": "$uri"}'
+    access_log_format_escape: json
+plugins:
+  - opentelemetry
+plugin_attr:
+  opentelemetry:
+    set_ngx_var: true
+```
+
 ## 如何启用
 
 `opentelemetry` 插件默认为禁用状态，你需要在配置文件（`./conf/config.yaml`）中开启该插件：
@@ -124,7 +147,7 @@ curl http://127.0.0.1:9180/apisix/admin/routes/1  \
 }'
 ```
 
-## 禁用插件
+## 删除插件
 
 当你需要禁用 `opentelemetry` 插件时，可以通过以下命令删除相应的 JSON 配置，APISIX 将会自动重新加载相关配置，无需重启服务：
 

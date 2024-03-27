@@ -45,11 +45,13 @@ Use cases:
 | `request`      | object       | False      | request body transformation configuration      |
 | `request.input_format`      | string       | False      | request body original format, if not specified, it would be determined from `Content-Type` header.      |
 | `request.template`      | string       | True      | request body transformation template       |
+| `request.template_is_base64`      | boolean       | False    | Set to true if the template is base64 encoded       |
 | `response`      | object       | False      | response body transformation configuration      |
 | `response.input_format`      | string       | False      | response body original format, if not specified, it would be determined from `Content-Type` header.       |
 | `response.template`      | string       | True      | response body transformation template       |
+| `response.template_is_base64`      | boolean       | False     | Set to true if the template is base64 encoded       |
 
-## Enabling the Plugin
+## Enable Plugin
 
 You can enable the Plugin on a specific Route as shown below:
 
@@ -257,9 +259,9 @@ curl -s http://127.0.0.1:9080/ws -H 'content-type: application/json' -X POST -d 
 }
 ```
 
-## Disable Plugin
+## Delete Plugin
 
-To disable the `body-transformer` Plugin, you can delete the corresponding JSON configuration from the Plugin configuration. APISIX will automatically reload and you do not have to restart for this to take effect.
+To remove the `body-transformer` Plugin, you can delete the corresponding JSON configuration from the Plugin configuration. APISIX will automatically reload and you do not have to restart for this to take effect.
 
 ```shell
 curl http://127.0.0.1:9180/apisix/admin/routes/test_ws \

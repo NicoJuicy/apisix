@@ -57,7 +57,7 @@ APISIX takes in an HTTP request, transcodes it and forwards it to a gRPC service
 | default values  | `auto_default_values`, `no_default_values`, `use_default_values`, `use_default_metatable` |
 | hooks           | `enable_hooks`, `disable_hooks`                                                           |
 
-## Enabling the Plugin
+## Enable Plugin
 
 Before enabling the Plugin, you have to add the content of your `.proto` or `.pb` files to APISIX.
 
@@ -102,7 +102,7 @@ The output binary file, `proto.pb` will contain both `helloworld.proto` and `imp
 
 We can now use the content of `proto.pb` in the `content` field of the API request.
 
-As the content of the proto is binary, we encode it in `base64` using this shell command:
+As the content of the proto is binary, we encode it in `base64` and configure the content in APISIX:
 
 ```shell
 curl http://127.0.0.1:9180/apisix/admin/protos/1 \
@@ -112,23 +112,10 @@ curl http://127.0.0.1:9180/apisix/admin/protos/1 \
 }'
 ```
 
-This script will take in a `.pb` file and the `id` to create, encodes the content of the proto to `base64`, and calls the Admin API with this encoded content.
-
-To run the script:
-
-```bash
-chmod +x ./upload_pb.py
-```
+You should see an `HTTP/1.1 201 Created` response with the following:
 
 ```
-./upload_pb.py proto.pb 1
-```
-
-Response:
-
-```
-# 200
-# {"node":{"value":{"create_time":1643879753,"update_time":1643883085,"content":"CmgKEnByb3RvL2ltcG9ydC5wcm90bxIDcGtnIhoKBFVzZXISEgoEbmFtZRgBIAEoCVIEbmFtZSIeCghSZXNwb25zZRISCgRib2R5GAEgASgJUgRib2R5QglaBy4vcHJvdG9iBnByb3RvMwq9AQoPcHJvdG8vc3JjLnByb3RvEgpoZWxsb3dvcmxkGhJwcm90by9pbXBvcnQucHJvdG8iPAoHUmVxdWVzdBIdCgR1c2VyGAEgASgLMgkucGtnLlVzZXJSBHVzZXISEgoEYm9keRgCIAEoCVIEYm9keTI5CgpUZXN0SW1wb3J0EisKA1J1bhITLmhlbGxvd29ybGQuUmVxdWVzdBoNLnBrZy5SZXNwb25zZSIAQglaBy4vcHJvdG9iBnByb3RvMw=="},"key":"\/apisix\/proto\/1"}}
+{"node":{"value":{"create_time":1643879753,"update_time":1643883085,"content":"CmgKEnByb3RvL2ltcG9ydC5wcm90bxIDcGtnIhoKBFVzZXISEgoEbmFtZRgBIAEoCVIEbmFtZSIeCghSZXNwb25zZRISCgRib2R5GAEgASgJUgRib2R5QglaBy4vcHJvdG9iBnByb3RvMwq9AQoPcHJvdG8vc3JjLnByb3RvEgpoZWxsb3dvcmxkGhJwcm90by9pbXBvcnQucHJvdG8iPAoHUmVxdWVzdBIdCgR1c2VyGAEgASgLMgkucGtnLlVzZXJSBHVzZXISEgoEYm9keRgCIAEoCVIEYm9keTI5CgpUZXN0SW1wb3J0EisKA1J1bhITLmhlbGxvd29ybGQuUmVxdWVzdBoNLnBrZy5SZXNwb25zZSIAQglaBy4vcHJvdG9iBnByb3RvMw=="},"key":"\/apisix\/proto\/1"}}
 ```
 
 Now, we can enable the `grpc-transcode` Plugin to a specific Route:
@@ -238,7 +225,7 @@ If the gRPC service returns an error, there may be a `grpc-status-details-bin` f
 Upload the proto file：
 
 ```shell
-curl http://127.0.0.1:9080/apisix/admin/proto/1 \
+curl http://127.0.0.1:9180/apisix/admin/protos/1 \
 -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -d '
 {
     "content" : "syntax = \"proto3\";
@@ -260,7 +247,7 @@ curl http://127.0.0.1:9080/apisix/admin/proto/1 \
 Enable the `grpc-transcode` plugin，and set the option `show_status_in_body` to `true`：
 
 ```shell
-curl http://127.0.0.1:9080/apisix/admin/routes/1 \
+curl http://127.0.0.1:9180/apisix/admin/routes/1 \
 -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -d '
 {
     "methods": ["GET"],
@@ -308,7 +295,7 @@ Server: APISIX web server
 Note that there is an undecoded field in the return body. If you need to decode the field, you need to add the `message type` of the field in the uploaded proto file.
 
 ```shell
-curl http://127.0.0.1:9080/apisix/admin/proto/1 \
+curl http://127.0.0.1:9180/apisix/admin/protos/1 \
 -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -d '
 {
     "content" : "syntax = \"proto3\";
@@ -335,7 +322,7 @@ curl http://127.0.0.1:9080/apisix/admin/proto/1 \
 Also configure the option `status_detail_type` to `helloworld.ErrorDetail`.
 
 ```shell
-curl http://127.0.0.1:9080/apisix/admin/routes/1 \
+curl http://127.0.0.1:9180/apisix/admin/routes/1 \
 -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -d '
 {
     "methods": ["GET"],
@@ -375,9 +362,9 @@ Server: APISIX web server
 {"error":{"details":[{"type":"service","message":"The server is out of service","code":1}],"message":"Out of service","code":14}}
 ```
 
-## Disable Plugin
+## Delete Plugin
 
-To disable the `grpc-transcode` Plugin, you can delete the corresponding JSON configuration from the Plugin configuration. APISIX will automatically reload and you do not have to restart for this to take effect.
+To remove the `grpc-transcode` Plugin, you can delete the corresponding JSON configuration from the Plugin configuration. APISIX will automatically reload and you do not have to restart for this to take effect.
 
 ```shell
 curl http://127.0.0.1:9180/apisix/admin/routes/111 -H 'X-API-KEY: edd1c9f034335f136f87ad84b625c8f1' -X PUT -d '

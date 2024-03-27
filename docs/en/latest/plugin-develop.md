@@ -259,7 +259,7 @@ Here is the consumer configuration for key-auth plugin:
 }
 ```
 
-It will be used when you try to create a [Consumer](https://github.com/apache/apisix/blob/master/docs/en/latest/admin-api.md#consumer)
+It will be used when you try to create a [Consumer](./admin-api.md#consumer)
 
 To validate the configuration, the plugin uses a schema like this:
 
@@ -341,7 +341,7 @@ If none of the keys in `keyring` can decrypt the data, the original data is used
 Determine which phase to run, generally access or rewrite. If you don't know the [OpenResty lifecycle](https://github.com/openresty/lua-nginx-module/blob/master/README.markdown#directives), it's
 recommended to know it in advance. For example key-auth is an authentication plugin, thus the authentication should be completed
 before forwarding the request to any upstream service. Therefore, the plugin must be executed in the rewrite phases.
-In APISIX, only the authentication logic can be run in the rewrite phase. Other logic needs to run before proxy should be in access phase.
+Similarly, if you want to modify or process the response body or headers you can do that in the `body_filter` or in the `header_filter` phases respectively.
 
 The following code snippet shows how to implement any logic relevant to the plugin in the OpenResty log phase.
 
@@ -551,7 +551,7 @@ are located in the following folder: 't/servroot/logs'.
 
 The above test case represents a simple scenario. Most scenarios will require multiple steps to validate. To do this, create multiple tests `=== TEST 1`, `=== TEST 2`, and so on. These tests will be executed sequentially, allowing you to break down scenarios into a sequence of atomic steps.
 
-Additionally, there are some convenience testing endpoints which can be found [here](https://github.com/apache/apisix/blob/master/t/lib/server.lua#L36). For example, see [proxy-rewrite](https://github.com/apache/apisix/blob/master/t/plugin/proxy-rewrite.lua). In test 42, the upstream `uri` is made to redirect `/test?new_uri=hello` to `/hello` (which always returns `hello world`). In test 43, the response body is confirmed to equal `hello world`, meaning the proxy-rewrite configuration added with test 42 worked correctly.
+Additionally, there are some convenience testing endpoints which can be found [here](https://github.com/apache/apisix/blob/master/t/lib/server.lua#L36). For example, see [proxy-rewrite](https://github.com/apache/apisix/blob/master/t/plugin/proxy-rewrite.t). In test 42, the upstream `uri` is made to redirect `/test?new_uri=hello` to `/hello` (which always returns `hello world`). In test 43, the response body is confirmed to equal `hello world`, meaning the proxy-rewrite configuration added with test 42 worked correctly.
 
 Refer the following [document](building-apisix.md) to setup the testing framework.
 

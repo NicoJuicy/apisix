@@ -24,6 +24,7 @@ local schema = {
     properties = {
         uri = {type = "string"},
         allow_degradation = {type = "boolean", default = false},
+        status_on_error = {type = "integer", minimum = 200, maximum = 599, default = 403},
         ssl_verify = {
             type = "boolean",
             default = true,
@@ -88,6 +89,9 @@ function _M.access(conf, ctx)
         ["X-Forwarded-Host"] = core.request.get_host(ctx),
         ["X-Forwarded-Uri"] = ctx.var.request_uri,
         ["X-Forwarded-For"] = core.request.get_remote_client_ip(ctx),
+        ["Expect"] = core.request.header(ctx, "expect"),
+        ["Content-Length"] = core.request.header(ctx, "content-length"),
+        ["Transfer-Encoding"] = core.request.header(ctx, "transfer-encoding")
     }
 
     -- append headers that need to be get from the client request header
@@ -106,8 +110,17 @@ function _M.access(conf, ctx)
         method = conf.request_method
     }
 
+    local httpc = http.new()
+    httpc:set_timeout(conf.timeout)
     if params.method == "POST" then
-        params.body = core.request.get_body()
+        local client_body_reader, err = httpc:get_client_body_reader()
+        if client_body_reader then
+            params.body = client_body_reader
+        else
+            core.log.warn("failed to get client_body_reader. err: ", err,
+            " using core.request.get_body() instead")
+            params.body = core.request.get_body()
+        end
     end
 
     if conf.keepalive then
@@ -115,15 +128,12 @@ function _M.access(conf, ctx)
         params.keepalive_pool = conf.keepalive_pool
     end
 
-    local httpc = http.new()
-    httpc:set_timeout(conf.timeout)
-
     local res, err = httpc:request_uri(conf.uri, params)
     if not res and conf.allow_degradation then
         return
     elseif not res then
-        core.log.error("failed to process forward auth, err: ", err)
-        return 403
+        core.log.warn("failed to process forward auth, err: ", err)
+        return conf.status_on_error
     end
 
     if res.status >= 300 then
